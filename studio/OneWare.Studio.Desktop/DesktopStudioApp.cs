@@ -55,18 +55,12 @@ public class DesktopStudioApp : StudioApp
         moduleCatalog.AddModule<VhdlModule>();
         moduleCatalog.AddModule<VerilogModule>();
         moduleCatalog.AddModule<OssCadSuiteIntegrationModule>();
-
+        
         try
         {
-            var commandLineArgs = Environment.GetCommandLineArgs();
-            if (commandLineArgs.Length > 1)
+            if (Environment.GetEnvironmentVariable("ONEWARE_MODULES") is { } pluginPath)
             {
-                var m = commandLineArgs.IndexOf(x => x == "--modules");
-                if (m >= 0 && m < commandLineArgs.Length - 1)
-                {
-                    var path = commandLineArgs[m + 1];
-                    Container.Resolve<IPluginService>().AddPlugin(path);
-                }
+                Container.Resolve<IPluginService>().AddPlugin(pluginPath);
             }
 
             var plugins = Directory.GetDirectories(Paths.PluginsDirectory);
@@ -80,8 +74,7 @@ public class DesktopStudioApp : StudioApp
 
     public override void OnFrameworkInitializationCompleted()
     {
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime &&
-            RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
         {
             _splashWindow = new SplashWindow
             {
@@ -149,7 +142,7 @@ public class DesktopStudioApp : StudioApp
         }
 
         await Task.Delay(1000);
-
+        
         _splashWindow?.Close();
 
         try
