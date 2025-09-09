@@ -20,6 +20,7 @@ using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
 using Prism.Ioc;
 using Prism.Modularity;
+using IDockService = OneWare.Essentials.Services.IDockService;
 using Orientation = Avalonia.Layout.Orientation;
 
 // ReSharper disable StringLiteralTypo
@@ -178,6 +179,83 @@ public class OssCadSuiteIntegrationModule : IModule
                         Target = "osx-arm64",
                         Url =
                             "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2025-01-22/oss-cad-suite-darwin-arm64-20250122.tgz",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = "oss-cad-suite",
+                                SettingKey = OssPathSetting
+                            }
+                        ]
+                    }
+                ]
+            },
+            new PackageVersion
+            {
+                Version = "2025.08.27",
+                Targets =
+                [
+                    new PackageTarget
+                    {
+                        Target = "win-x64",
+                        Url =
+                            "https://github.com/hendrikmennen/oss-cad-suite-build/releases/download/2025-08-27/oss-cad-suite-windows-x64-20250827.tgz",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = "oss-cad-suite",
+                                SettingKey = OssPathSetting
+                            }
+                        ]
+                    },
+                    new PackageTarget
+                    {
+                        Target = "linux-x64",
+                        Url =
+                            "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2025-08-27/oss-cad-suite-linux-x64-20250827.tgz",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = "oss-cad-suite",
+                                SettingKey = OssPathSetting
+                            }
+                        ]
+                    },
+                    new PackageTarget
+                    {
+                        Target = "linux-arm64",
+                        Url =
+                            "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2025-08-27/oss-cad-suite-linux-arm64-20250827.tgz",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = "oss-cad-suite",
+                                SettingKey = OssPathSetting
+                            }
+                        ]
+                    },
+                    new PackageTarget
+                    {
+                        Target = "osx-x64",
+                        Url =
+                            "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2025-08-27/oss-cad-suite-darwin-x64-20250827.tgz",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = "oss-cad-suite",
+                                SettingKey = OssPathSetting
+                            }
+                        ]
+                    },
+                    new PackageTarget
+                    {
+                        Target = "osx-arm64",
+                        Url =
+                            "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2025-08-27/oss-cad-suite-darwin-arm64-20250827.tgz",
                         AutoSetting =
                         [
                             new PackageAutoSetting

@@ -11,9 +11,10 @@ using RestSharp;
 
 namespace OneWare.CloudIntegration.Services;
 
-public class OneWareCloudLoginService
+public sealed class OneWareCloudLoginService
 {
     private readonly Dictionary<string, JwtToken> _jwtTokenCache = new();
+    private readonly SemaphoreSlim _semaphoreSlim = new(1, 1);
 
     private readonly ILogger _logger;
     private readonly ISettingsService _settingService;
@@ -65,14 +66,14 @@ public class OneWareCloudLoginService
 
     public async Task<(bool success, HttpStatusCode status)> RefreshAsync(string email)
     {
+        await _semaphoreSlim.WaitAsync();
+        
         try
         {
             string? refreshToken = null;
-            
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 var tokenPath = Path.Combine(_tokenPath, $"{email}.bin");
-
                 if (File.Exists(tokenPath))
                 {
                     var encrypted = await File.ReadAllBytesAsync(tokenPath);
@@ -85,12 +86,12 @@ public class OneWareCloudLoginService
                 var store = CredentialManager.Create("oneware");
 
                 var cred = store.Get(OneWareCloudIntegrationModule.CredentialStore, email);
-                refreshToken = cred?.Password ;
+                refreshToken = cred?.Password;
             }
             
+            if (refreshToken == null) 
+                return (false, HttpStatusCode.Unauthorized);
 
-            if (refreshToken == null) return (false, HttpStatusCode.Unauthorized);
-            
             var request = new RestRequest("/api/auth/refresh");
             request.AddJsonBody(new RefreshModel()
             {
@@ -101,11 +102,11 @@ public class OneWareCloudLoginService
             if (response.IsSuccessful)
             {
                 var data = JsonSerializer.Deserialize<JsonNode>(response.Content!)!;
-
                 var token = data["token"]?.GetValue<string>();
                 refreshToken = data["refreshToken"]?.GetValue<string>();
 
-                if (token == null || refreshToken == null) throw new Exception("Token or refresh token not found");
+                if (token == null || refreshToken == null) 
+                    throw new Exception("Token or refresh token not found");
 
                 SaveCredentials(email, token, refreshToken);
 
@@ -119,9 +120,13 @@ public class OneWareCloudLoginService
             _logger.Error(e.Message, e);
             return (false, HttpStatusCode.NoContent);
         }
+        finally
+        {
+            _semaphoreSlim.Release();
+        }
     }
 
-    public async Task<bool> LoginAsync(string email, string password)
+    public async Task<(bool success, HttpStatusCode status)> LoginAsync(string email, string password)
     {
         try
         {
@@ -145,17 +150,21 @@ public class OneWareCloudLoginService
 
                 SaveCredentials(email, token, refreshToken);
 
-                return true;
+                return (true, HttpStatusCode.OK);
+            }
+            else if (response.StatusCode == HttpStatusCode.TooManyRequests)
+            {
+                return (false, response.StatusCode);
             }
 
-            return false;
+            return (false, response.StatusCode);
         }
         catch (Exception e)
         {
             _logger.Error(e.Message, e);
         }
 
-        return false;
+        return (false, HttpStatusCode.NoContent);
     }
 
     public void Logout(string email)
